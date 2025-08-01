@@ -6,7 +6,6 @@ https://sunnyday-beta.vercel.app/
 
 ## ✨ Features
 
-- 🪑 Custom 3D models: Table and chair
 - 🌱 Realistic grass using vertex/fragment shaders
 - 🌤️ Sunny sky with adjustable sun and light direction
 - 🎮 Orbit controls for interactive camera movement
@@ -22,7 +21,7 @@ https://sunnyday-beta.vercel.app/
 - [Three.js](https://threejs.org/)
 - GLSL (Custom shaders for grass wave animation)
 - OrbitControls
-- Vite / Webpack (if used)
+- Vite
 
 
 ## 🚀 Getting Started
@@ -33,9 +32,10 @@ https://sunnyday-beta.vercel.app/
    cd sunny-scene
    ```
 
-    Open Visual Studio Code run the following,
+2. Open Visual Studio Code run the following,
     ```
-        npm install
-   
-         npm run dev
+    npm install
+    ```
+    ```
+    npm run dev
     ```
