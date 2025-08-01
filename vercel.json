@@ -1,4 +1,3 @@
-
 {
   "version": 2,
   "name": "Sunny Day",
@@ -13,9 +12,12 @@
       "dest": "/assets/$1"
     },
     {
+      "src": "/(.*\\.(?:glb|gltf|bin|png|jpg|jpeg|svg|css|js|json|mp3|wav|ogg))",
+      "dest": "/static/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
   ]
 }
-
