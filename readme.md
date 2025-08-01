@@ -31,8 +31,11 @@ https://sunnyday-beta.vercel.app/
    ```bash
    git clone https://github.com/Druv-4182122/Sunny-Day.git
    cd sunny-scene
+   ```
 
-   npm install
+    Open Visual Studio Code run the following,
+    ```
+        npm install
    
-   npm run dev
+         npm run dev
     ```
