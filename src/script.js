@@ -149,9 +149,113 @@ gltfLoader.load(
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(0, 0.2, -0.5)
-// camera.lookAt(0, 0, 0)
+camera.position.set(-0.654, 0.203, 0.243)
+camera.rotation.set(-0.690, -1.145, -0.645)
+
 scene.add(camera)
+
+// Assuming your camera is named 'camera'
+// and your Tweakpane instance is named 'pane'
+
+// 1. Create a folder for the camera controls
+const cameraFolder = pane.addFolder({
+    title: 'Camera',
+});
+
+const cameraConfig = {
+    positionX: camera.position.x,
+    positionY: camera.position.y,
+    positionZ: camera.position.z,
+    rotationX: camera.rotation.x,
+    rotationY: camera.rotation.y,
+    rotationZ: camera.rotation.z,
+};
+
+cameraFolder.addBinding(cameraConfig, 'positionX', {
+    min: -10,
+    max: 10,
+    step: 0.001,
+    label: 'Position X',
+}).on('change', () => {
+    camera.position.x = cameraConfig.positionX;
+});
+
+cameraFolder.addBinding(cameraConfig, 'positionY', {
+    min: -10,
+    max: 10,
+    step: 0.001,
+    label: 'Position Y',
+}).on('change', () => {
+    camera.position.y = cameraConfig.positionY;
+});
+
+cameraFolder.addBinding(cameraConfig, 'positionZ', {
+    min: -10,
+    max: 10,
+    step: 0.001,
+    label: 'Position Z',
+}).on('change', () => {
+    camera.position.z = cameraConfig.positionZ;
+});
+
+cameraFolder.addBinding(cameraConfig, 'rotationX', {
+    min: -Math.PI,
+    max: Math.PI,
+    step: 0.001,
+    label: 'Rotation X',
+}).on('change', () => {
+    camera.rotation.x = cameraConfig.rotationX;
+});
+
+cameraFolder.addBinding(cameraConfig, 'rotationY', {
+    min: -Math.PI,
+    max: Math.PI,
+    step: 0.001,
+    label: 'Rotation Y',
+}).on('change', () => {
+    camera.rotation.y = cameraConfig.rotationY;
+});
+
+cameraFolder.addBinding(cameraConfig, 'rotationZ', {
+    min: -Math.PI,
+    max: Math.PI,
+    step: 0.001,
+    label: 'Rotation Z',
+}).on('change', () => {
+    camera.rotation.z = cameraConfig.rotationZ;
+});
+
+
+const updateCameraConfig = () => {
+    cameraConfig.positionX = camera.position.x;
+    cameraConfig.positionY = camera.position.y;
+    cameraConfig.positionZ = camera.position.z;
+    cameraConfig.rotationX = camera.rotation.x;
+    cameraConfig.rotationY = camera.rotation.y;
+    cameraConfig.rotationZ = camera.rotation.z;
+    pane.refresh(); // Refresh Tweakpane to reflect updated values
+};
+
+// 2. Add controls for the camera's position
+// cameraFolder.addBinding(camera.position, 'x', {
+//     min: -10,
+//     max: 10,
+//     step: 0.001,
+//     label: 'Position X',
+// });
+// cameraFolder.addBinding(camera.position, 'y', {
+//     min: -10,
+//     max: 10,
+//     step: 0.001,
+//     label: 'Position Y',
+// });
+// cameraFolder.addBinding(camera.position, 'z', {
+//     min: -10,
+//     max: 10,
+//     step: 0.001,
+//     label: 'Position Z',
+// });
+
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
@@ -319,6 +423,7 @@ const tick = () =>
 
     // Update controls
     controls.update()
+    updateCameraConfig();
 
     // Render
     renderer.render(scene, camera)
