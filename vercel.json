@@ -1,7 +1,7 @@
 {
   "version": 2,
   "name": "Sunny Day",
-  "buildCommand": "npm run build",
+  "buildCommand": "chmod +x node_modules/.bin/vite && npm run build",
   "outputDirectory": "dist",
   "env": {
     "NODE_ENV": "production"
