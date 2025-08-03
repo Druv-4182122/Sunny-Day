@@ -17,6 +17,7 @@ import { Sky } from 'three/addons/objects/Sky.js'
 const pane = new Pane({title:'GUI Manipulation', expanded:false})
 const ssky = pane.addFolder({ title: 'Sky', expanded: false });
 const Grass = pane.addFolder({ title: 'Grass', expanded: false });
+const cameraFolder = pane.addFolder({ title: 'Camera', expanded: false });
 const Tweakpane = {
     directionallightIntensity: 1,
     directionalLightColor: '#86cdff',
@@ -158,9 +159,7 @@ scene.add(camera)
 // and your Tweakpane instance is named 'pane'
 
 // 1. Create a folder for the camera controls
-const cameraFolder = pane.addFolder({
-    title: 'Camera',
-});
+
 
 const cameraConfig = {
     positionX: camera.position.x,
