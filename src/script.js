@@ -11,7 +11,34 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { Sky } from 'three/addons/objects/Sky.js'
+import { LoadingManager } from 'three';
 
+// ...
+
+// Create a new LoadingManager
+const loadingManager = new THREE.LoadingManager();
+const loadingScreen = document.getElementById('loading-screen');
+const loadingBar = document.querySelector('.loading-bar');
+
+loadingManager.onProgress = function(url, itemsLoaded, itemsTotal) {
+  // Update the progress bar's width
+  const progress = (itemsLoaded / itemsTotal) * 100;
+  loadingBar.style.width = `${progress}%`;
+};
+
+loadingManager.onLoad = function() {
+  // Fades out the loading screen once everything is loaded
+  loadingScreen.classList.add('fade-out');
+
+  // Remove the loading screen from the DOM after the fade-out transition
+  loadingScreen.addEventListener('transitionend', () => {
+    loadingScreen.remove();
+  });
+};
+
+loadingManager.onError = function(url) {
+  console.error('There was an error loading ' + url);
+};
 /**
  * Base
  */
@@ -67,7 +94,7 @@ smokeGeometry.translate(0, 0.5, 0)
 smokeGeometry.scale(1.5, 6, 1.5)
 
 // Perlin texture
-const textureLoader = new THREE.TextureLoader()
+const textureLoader = new THREE.TextureLoader(loadingManager)
 const perlinTexture = textureLoader.load('./img/perlin.png')
 perlinTexture.wrapS = THREE.RepeatWrapping
 perlinTexture.wrapT = THREE.RepeatWrapping
@@ -235,10 +262,10 @@ window.addEventListener('resize', () =>
 
 //gltf
 
-const dracoLoader = new DRACOLoader()
+const dracoLoader = new DRACOLoader(loadingManager)
 dracoLoader.setDecoderPath('/draco/')
 
-const gltfLoader = new GLTFLoader()
+const gltfLoader = new GLTFLoader(loadingManager)
 gltfLoader.setDRACOLoader(dracoLoader)
 
 gltfLoader.load(
