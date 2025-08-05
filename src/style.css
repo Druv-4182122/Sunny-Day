@@ -150,3 +150,9 @@ body
   background-color: white;
   transition: width 0.1s;
 }
+
+.loading-text {
+  font-size: 30px;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  margin-bottom: 20px;
+}
