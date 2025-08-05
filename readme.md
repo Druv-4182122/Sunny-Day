@@ -13,7 +13,7 @@ https://sunnyday-beta.vercel.app/
 
 ## 🖼 Preview
 
-![Scene Preview](static/img/preview.png)    
+![Scene Preview](static/img/image.png)
 
 
 ## 🛠️ Technologies Used
