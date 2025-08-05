@@ -4,8 +4,11 @@ import GUI from 'lil-gui'
 import {Pane} from 'tweakpane'
 import waterVertexShader from './shaders/water/vertex.glsl'
 import waterFragmentShader from './shaders/water/fragment.glsl'
+import coffeeSmokeVertexShader from './smokey/coffeeSmoke/vertex.glsl'
+import coffeeSmokeFragmentShader from './smokey/coffeeSmoke/fragment.glsl'
 import { label, min } from 'three/tsl'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { Sky } from 'three/addons/objects/Sky.js'
 
@@ -18,14 +21,21 @@ const pane = new Pane({title:'GUI Manipulation', expanded:false})
 const ssky = pane.addFolder({ title: 'Sky', expanded: false });
 const Grass = pane.addFolder({ title: 'Grass', expanded: false });
 const cameraFolder = pane.addFolder({ title: 'Camera', expanded: false });
+const coffeeSmokey = pane.addFolder({ title: 'Coffee Smoke', expanded: false });
 const Tweakpane = {
-    directionallightIntensity: 1,
+    directionallightIntensity: 0,
+    directionallight2Intensity: 4.5,
     directionalLightColor: '#86cdff',
     turbidity: 15,         
     rayleigh: 0.2,        
     mieCoefficient: 0.08,   
     mieDirectionalG: 0.99,   
-    fogdensity:0.05
+    fogdensity:0.05,
+    uTwistStrength: 10.0,
+    uWindStrength: 10.0,
+    uTwistSpeed: 0.005,
+    uWindSpeed: 0.01,
+    enableOrbitControls: true
 }
 Tweakpane.ambientlightintensity = 0.5
 Tweakpane.ambientlightcolor = '#ffffff'
@@ -52,12 +62,110 @@ sun.setFromSphericalCoords(1, theta, phi);
 sky.material.uniforms['sunPosition'].value.copy(sun);
 // sky.material.uniforms['sunPosition'].value.set(0.3, -0.038, -0.95)
 
+const smokeGeometry = new THREE.PlaneGeometry(1, 1, 16, 64)
+smokeGeometry.translate(0, 0.5, 0)
+smokeGeometry.scale(1.5, 6, 1.5)
+
+// Perlin texture
+const textureLoader = new THREE.TextureLoader()
+const perlinTexture = textureLoader.load('./img/perlin.png')
+perlinTexture.wrapS = THREE.RepeatWrapping
+perlinTexture.wrapT = THREE.RepeatWrapping
+
+// Material
+const smokeMaterial = new THREE.ShaderMaterial({
+    vertexShader: coffeeSmokeVertexShader,
+    fragmentShader: coffeeSmokeFragmentShader,
+    uniforms:
+    {
+        uTime: new THREE.Uniform(0),
+        uTwistStrength: {value: 10.0},
+        uWindStrength: {value: 10.0},
+        uTwistSpeed: {value: 0.005},
+        uWindSpeed: {value: 0.01},
+        uPerlinTexture: new THREE.Uniform(perlinTexture)
+    },
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthWrite: false
+    // wireframe: true
+})
+
+// Mesh
+const smoke = new THREE.Mesh(smokeGeometry, smokeMaterial)
+// smoke.position.y = 1.83
+smoke.position.x = -0.45
+smoke.position.z = 0.038
+smoke.position.y = 0.147
+smoke.scale.setScalar(0.02)
+scene.add(smoke)
+
+// const axisHelper = new THREE.AxesHelper(5);
+// scene.add(axisHelper)
+
 const ambientLight = new THREE.AmbientLight(Tweakpane.ambientlightcolor, Tweakpane.ambientlightintensity)
 scene.add(ambientLight)
 
 const directionalLight = new THREE.DirectionalLight(Tweakpane.directionalLightColor, Tweakpane.directionallightIntensity)
-directionalLight.position.set(3, 2, -8)
+directionalLight.position.z = 1.32
+directionalLight.position.x = -0.5
+directionalLight.position.y = 0.75
 scene.add(directionalLight)
+
+// directionalLight.castShadow = true;
+
+const lightTarget = new THREE.Object3D();
+lightTarget.position.set(-0.45, 0.15, 0.038); // near the top of the cup
+scene.add(lightTarget);
+
+directionalLight.target = lightTarget;
+scene.add(directionalLight.target);
+
+
+// const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 0.5)
+// scene.add(directionalLightHelper)
+
+directionalLight.shadow.mapSize.width = 1024; // Increase shadow map resolution
+directionalLight.shadow.mapSize.height = 1024;
+
+const d = 1.5; // Size of the shadow camera's frustum
+directionalLight.shadow.camera.left = -d /2;
+directionalLight.shadow.camera.right = d;
+directionalLight.shadow.camera.top = d /2;
+directionalLight.shadow.camera.bottom = -d/2;
+directionalLight.shadow.camera.near = 1;
+directionalLight.shadow.camera.far = 2.5;
+
+// Optional: Helper to visualize the shadow camera frustum
+// const shadowHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+// scene.add(shadowHelper);
+
+const directionalLight2 = new THREE.DirectionalLight(Tweakpane.directionalLightColor, Tweakpane.directionallight2Intensity);
+directionalLight2.position.set(0.5, 0.8, 0.185); // From the left side (mirror of the first light)
+
+
+// Reuse the same target or create a new one if needed
+directionalLight2.target = lightTarget;
+scene.add(directionalLight2);
+scene.add(directionalLight2.target);
+directionalLight2.castShadow = true;
+
+// const directionalLightHelper2 = new THREE.DirectionalLightHelper(directionalLight2, 0.5)
+// scene.add(directionalLightHelper2)
+
+directionalLight2.shadow.mapSize.width = 2048; // Increase shadow map resolution
+directionalLight2.shadow.mapSize.height = 2048;
+
+const e = 1.5; // Size of the shadow camera's frustum
+directionalLight2.shadow.camera.left = -e /2;
+directionalLight2.shadow.camera.right = e/2;
+directionalLight2.shadow.camera.top = e /2;
+directionalLight2.shadow.camera.bottom = -e/4;
+directionalLight2.shadow.camera.near = 1;
+directionalLight2.shadow.camera.far = 2;
+
+// const shadowHelper = new THREE.CameraHelper(directionalLight2.shadow.camera);
+// scene.add(shadowHelper);
 /**
  * Water
  */
@@ -98,6 +206,7 @@ const waterMaterial = new THREE.ShaderMaterial({
 // Mesh
 const water = new THREE.Mesh(waterGeometry, waterMaterial)
 water.rotation.x = - Math.PI * 0.5
+water.receiveShadow = true; 
 scene.add(water)
 
 /**
@@ -118,10 +227,11 @@ window.addEventListener('resize', () =>
     camera.aspect = sizes.width / sizes.height
     camera.updateProjectionMatrix()
 
-    // Update renderer
+    // Update renderer  
     renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
+
 
 //gltf
 
@@ -140,9 +250,38 @@ gltfLoader.load(
         model.position.x = -0.5
         model.position.y = -0.1
         model.scale.setScalar(0.30)
+        model.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            }
+        });
         scene.add(model)
     }
 )
+// const fbxLoader = new FBXLoader();
+
+gltfLoader.load(
+    '/models/new/testingss/mugwithsaucer03_v3.1_Cycles.gltf',
+    (gltf) =>
+    {
+        const model  = gltf.scene
+        console.log(model)
+        // // model.rotation.y = Math.PI * 0.5
+        model.position.x = -0.45
+        model.position.z = 0.038
+        model.position.y = 0.116
+        model.scale.setScalar(0.511)
+        model.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+            }
+        });
+        scene.add(model)
+    }
+)
+
+
 
 
 /**
@@ -150,8 +289,10 @@ gltfLoader.load(
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(-0.654, 0.203, 0.243)
-camera.rotation.set(-0.690, -1.145, -0.645)
+// camera.position.set(-0.654, 0.203, 0.243)
+// camera.rotation.set(-0.690, -1.145, -0.645)
+camera.position.set(-0.655, 0.241, 0.201)
+camera.rotation.set(-0.876, -1.124, -0.824)
 
 scene.add(camera)
 
@@ -197,6 +338,12 @@ cameraFolder.addBinding(cameraConfig, 'positionZ', {
     camera.position.z = cameraConfig.positionZ;
 });
 
+cameraFolder.addBinding(Tweakpane, 'enableOrbitControls', {
+    label: 'To Tweak Camera Rotation disable Orbit Controls',
+}).on('change', () => {
+    controls.enabled = Tweakpane.enableOrbitControls;
+});
+
 cameraFolder.addBinding(cameraConfig, 'rotationX', {
     min: -Math.PI,
     max: Math.PI,
@@ -224,6 +371,20 @@ cameraFolder.addBinding(cameraConfig, 'rotationZ', {
     camera.rotation.z = cameraConfig.rotationZ;
 });
 
+cameraFolder.addButton({ title: 'Reset' }).on('click', () => {
+    // Default values for Camera controls
+    cameraConfig.positionX = -0.655;
+    cameraConfig.positionY = 0.241;
+    cameraConfig.positionZ = 0.201;
+    cameraConfig.rotationX = -0.876;
+    cameraConfig.rotationY = -1.124;
+    cameraConfig.rotationZ = -0.824;
+
+    camera.position.set(cameraConfig.positionX, cameraConfig.positionY, cameraConfig.positionZ);
+    camera.rotation.set(cameraConfig.rotationX, cameraConfig.rotationY, cameraConfig.rotationZ);
+
+    pane.refresh();
+});
 
 const updateCameraConfig = () => {
     cameraConfig.positionX = camera.position.x;
@@ -268,6 +429,8 @@ const renderer = new THREE.WebGLRenderer({
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 //Tweakpane
 
@@ -362,6 +525,26 @@ Grass.addBinding(waterMaterial.uniforms.uColorMultiplier, 'value',{
     label: 'Color Multiplier'
 })
 
+Grass.addButton({ title: 'Reset' }).on('click', () => {
+    // Default values for Grass controls
+    Tweakpane.depthColor = '#000000';
+    Tweakpane.surfaceColor = '#599e33';
+    waterMaterial.uniforms.uBigWavesElevation.value = 0.017;
+    waterMaterial.uniforms.uBigWavesFrequency.value.set(1.875, 0);
+    waterMaterial.uniforms.uBigWavesSpeed.value = 0.75;
+    waterMaterial.uniforms.uSmallWavesElevation.value = 0.073;
+    waterMaterial.uniforms.uSmallWavesFrequency.value = 30;
+    waterMaterial.uniforms.uSmallWavesSpeed.value = 0.101;
+    waterMaterial.uniforms.uSmallIterations.value = 5;
+    waterMaterial.uniforms.uDepthColor.value.set(Tweakpane.depthColor);
+    waterMaterial.uniforms.uSurfaceColor.value.set(Tweakpane.surfaceColor);
+    waterMaterial.uniforms.uColorOffset.value = 0.073;
+    waterMaterial.uniforms.uColorMultiplier.value = 8.042;
+
+    // Refresh Tweakpane UI
+    pane.refresh();
+});
+
 // Grass.addBinding(Tweakpane, 'ambientlightintensity', {
 //     min: -5,
 //     max: 5,
@@ -408,6 +591,60 @@ ssky.addBinding(Tweakpane, 'mieDirectionalG', {
     sky.material.uniforms['mieDirectionalG'].value = Tweakpane.mieDirectionalG;
 });
 
+
+coffeeSmokey.addBinding(Tweakpane, 'uTwistStrength', {
+    min: 0,
+    max: 20,
+    step: 0.1,
+    label: 'Twist Strength'
+}).on('change', () => {
+    smokeMaterial.uniforms.uTwistStrength.value = Tweakpane.uTwistStrength;
+});
+
+coffeeSmokey.addBinding(Tweakpane, 'uWindStrength', {
+    min: 0,
+    max: 20,
+    step: 0.1,
+    label: 'Wind Strength'
+}).on('change', () => {
+    smokeMaterial.uniforms.uWindStrength.value = Tweakpane.uWindStrength;
+});
+
+coffeeSmokey.addBinding(Tweakpane, 'uTwistSpeed', {
+    min: 0,
+    max: 1,
+    step: 0.001,
+    label: 'Twist Speed'
+}).on('change', () => {
+    smokeMaterial.uniforms.uTwistSpeed.value = Tweakpane.uTwistSpeed;
+});
+
+coffeeSmokey.addBinding(Tweakpane, 'uWindSpeed', {
+    min: 0,
+    max: 1,
+    step: 0.001,
+    label: 'Wind Speed'
+}).on('change', () => {
+    smokeMaterial.uniforms.uWindSpeed.value = Tweakpane.uWindSpeed;
+});
+
+coffeeSmokey.addButton({ title: 'Reset' }).on('click', () => {
+    // Default values
+    Tweakpane.uTwistStrength = 10.0;
+    Tweakpane.uWindStrength = 10.0;
+    Tweakpane.uTwistSpeed = 0.005;
+    Tweakpane.uWindSpeed = 0.01;
+
+    // Update uniforms
+    smokeMaterial.uniforms.uTwistStrength.value = Tweakpane.uTwistStrength;
+    smokeMaterial.uniforms.uWindStrength.value = Tweakpane.uWindStrength;
+    smokeMaterial.uniforms.uTwistSpeed.value = Tweakpane.uTwistSpeed;
+    smokeMaterial.uniforms.uWindSpeed.value = Tweakpane.uWindSpeed;
+
+    // Refresh Tweakpane UI
+    pane.refresh();
+});
+
 /**
  * Animate
  */
@@ -419,9 +656,13 @@ const tick = () =>
 
     // Water
     waterMaterial.uniforms.uTime.value = elapsedTime
+    smokeMaterial.uniforms.uTime.value = elapsedTime
 
     // Update controls
-    controls.update()
+    if (Tweakpane.enableOrbitControls) {
+        controls.update();
+    }
+    
     updateCameraConfig();
 
     // Render
