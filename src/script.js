@@ -15,30 +15,45 @@ import { LoadingManager } from 'three';
 
 // ...
 
+// --- Get references to UI elements ---
+const instructionsScreen = document.getElementById('instructions-screen');
+const closeInstructionsBtn = document.getElementById('close-instructions-btn');
+const showInstructionsBtn = document.getElementById('show-instructions-btn'); // The new button
+
 // Create a new LoadingManager
 const loadingManager = new THREE.LoadingManager();
 const loadingScreen = document.getElementById('loading-screen');
 const loadingBar = document.querySelector('.loading-bar');
 
 loadingManager.onProgress = function(url, itemsLoaded, itemsTotal) {
-  // Update the progress bar's width
   const progress = (itemsLoaded / itemsTotal) * 100;
   loadingBar.style.width = `${progress}%`;
 };
 
 loadingManager.onLoad = function() {
-  // Fades out the loading screen once everything is loaded
   loadingScreen.classList.add('fade-out');
-
-  // Remove the loading screen from the DOM after the fade-out transition
   loadingScreen.addEventListener('transitionend', () => {
     loadingScreen.remove();
+    // Show instructions for the first time
+    instructionsScreen.classList.remove('hidden');
   });
 };
 
 loadingManager.onError = function(url) {
   console.error('There was an error loading ' + url);
 };
+
+// --- UI Event Listeners ---
+// Hides the instruction screen
+closeInstructionsBtn.addEventListener('click', () => {
+    instructionsScreen.classList.add('hidden');  
+});
+
+// Shows the instruction screen
+showInstructionsBtn.addEventListener('click', () => {
+    instructionsScreen.classList.remove('hidden');
+});
+
 /**
  * Base
  */
@@ -676,6 +691,7 @@ coffeeSmokey.addButton({ title: 'Reset' }).on('click', () => {
  * Animate
  */
 const clock = new THREE.Clock()
+let manualelapsedTime = 0
 
 const tick = () =>
 {
